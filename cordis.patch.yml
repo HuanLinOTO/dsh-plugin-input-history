@@ -1,0 +1,14 @@
+# Insert dsh-plugin-input-history: terminal-style prompt history navigation
+# for the DSH composer. ArrowUp cycles to the previous sent prompt,
+# ArrowDown to the next (or restores the in-progress draft when past the
+# newest entry). History is collected from user + steering messages across
+# all sessions and persisted in localStorage (FIFO, 500 entries).
+#
+# The plugin registers an invisible entry in `conversation.composer.dock`
+# and attaches a bubble-phase `keydown` listener on `document`. The
+# listener honours IME composition, the slash-menu arbitration contract
+# (defers to `event.defaultPrevented`), and a multi-line cursor boundary
+# check (ArrowUp triggers only on the first line, ArrowDown on the last).
+- insert:
+    - id: dsh-plugin-input-history
+      name: '@huanlin/dsh-plugin-input-history'
