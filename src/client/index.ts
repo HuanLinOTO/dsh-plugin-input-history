@@ -36,6 +36,7 @@ import { isImeComposition } from './ime.ts'
 import { cursorLineInfo, findComposerTextarea } from './dom.ts'
 import { nextIndex, entryAt } from './history.ts'
 import { en, NS, zh, type InputHistoryKey } from './locales.ts'
+import { dicts } from './dictionaries.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
@@ -46,6 +47,11 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 
 /** Required services: slots + locale. */
 export const inject = ['slots', 'locale']
+
+/** Structural view of better-locale's override store (optional; no runtime dep). */
+interface BetterLocaleOverrideStore {
+  register(ns: string, dicts: Record<string, Record<string, string>>): () => void
+}
 
 /**
  * Navigation cursor + saved draft for the keydown listener. Module-scoped
@@ -62,6 +68,14 @@ let savedDraft: string | null = null
  */
 export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'dsh-plugin-input-history: dictionaries')
+
+  // better-locale override: register the 19-language dicts so a selected
+  // override language (with DSH on 'en') replaces the plugin's copy. The
+  // service is optional — no better-locale, no dicts.
+  const betterLocale = ctx.get('betterLocale') as BetterLocaleOverrideStore | undefined
+  if (betterLocale !== undefined) {
+    ctx.effect(() => betterLocale.register(NS, dicts), 'dsh-plugin-input-history: better-locale override dicts')
+  }
 
   // The dock collects history from session.nodes. It is session-scoped;
   // in hero/blank mode it is suppressed, but the keydown listener below
