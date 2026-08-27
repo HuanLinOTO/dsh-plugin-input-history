@@ -1,30 +1,22 @@
 /**
  * dsh-plugin-input-history — browser half.
  *
- * Two registrations:
- *   - `conversation.composer.dock` list slot (id `dsh-plugin-input-history`,
- *     order 100) — renders an invisible anchor that collects history from
- *     `session.nodes` every render. The dock is session-scoped; DSH treats
- *     blank sessions as "hero" and suppresses the dock, so history
- *     collection only runs in active sessions. That is fine: the first
- *     message in a blank session is collected after the session becomes
- *     active (the message makes it non-blank).
- *   - A document-level `keydown` listener attached in `apply` (NOT in the
- *     dock component) — this ensures the listener is always active,
- *     including in hero/blank mode where the dock is suppressed. The
- *     listener uses the native `value` setter + `dispatchEvent('input')`
- *     to feed history text into the textarea, which triggers InputBar's
- *     `onChange` → `keyboard.setDraft` — the same path the user's typing
- *     takes.
+ * One registration: the `conversation.composer.dock` list slot (id
+ * `dsh-plugin-input-history`, order 100) mounts the invisible dock entry
+ * that owns both plugin behaviors — prompt-history collection from the
+ * Chat target's user/steering nodes, and the capture-phase document
+ * keydown listener that navigates the composer draft through
+ * `inputActions.setDraft`. See [HistoryDock.tsx](./HistoryDock.tsx) for
+ * the data flow; the dock is session-scoped, so in hero/blank mode the
+ * plugin is dormant (no input machine exists there to drive).
  *
- * History is collected from `user` and `steering` conversation nodes as
- * they appear in any session's `ConversationSnapshot`, persisted to
- * `localStorage` (FIFO, 500 entries), and shared across all sessions
- * in the same browser profile.
+ * History is collected from `user` and `steering` chat nodes of any active
+ * session, persisted to `localStorage` (FIFO, 500 entries), and shared
+ * across all sessions in the same browser profile.
  *
  * @module @huanlin/dsh-plugin-input-history/client
  */
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client';
+import type { Context } from '@deepseek-ai/cordis';
 import { type InputHistoryKey } from './locales.ts';
 declare module '@deepseek-ai/dsh-client-ui-slots' {
     interface LocaleNamespaceMap {
@@ -35,8 +27,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 /** Required services: slots + locale. */
 export declare const inject: string[];
 /**
- * Client plugin body: register the dock + attach the keydown listener.
+ * Client plugin body: register the dock + locale dictionaries.
  *
  * @param ctx - client root context.
  */
-export declare function apply(ctx: ClientContext): void;
+export declare function apply(ctx: Context): void;

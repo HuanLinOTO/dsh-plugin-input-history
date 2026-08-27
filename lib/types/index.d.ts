@@ -3,14 +3,13 @@
  *
  * Client-only plugin: the host half has no runtime work. The browser half
  * (`./client`) registers an invisible entry in `conversation.composer.dock`
- * that attaches a document-level `keydown` listener and implements
- * terminal-style prompt history navigation (ArrowUp/ArrowDown) over the
- * composer textarea.
+ * that collects prompt history from the Chat target's user/steering nodes
+ * and implements terminal-style history navigation (ArrowUp/ArrowDown) over
+ * the composer's Lexical surface through `inputActions.setDraft`.
  *
- * History is collected from `user` and `steering` conversation nodes as
- * they appear in any session's `ConversationSnapshot`, persisted to
- * `localStorage` (FIFO, capacity 500), and shared across all sessions
- * in the same browser profile.
+ * History is collected from `user` and `steering` chat nodes of any active
+ * session, persisted to `localStorage` (FIFO, capacity 500), and shared
+ * across all sessions in the same browser profile.
  *
  * @module @huanlin/dsh-plugin-input-history
  */

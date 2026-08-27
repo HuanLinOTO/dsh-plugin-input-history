@@ -1,160 +1,153 @@
 // @vitest-environment jsdom
 /**
- * Unit tests for the DOM helpers.
+ * Unit tests for the DOM helpers: the pure line-boundary decision and the
+ * jsdom-testable locators. The DOM geometry extraction
+ * (`caretLineBoundary`) needs real layout rects and degrades to `null`
+ * under jsdom, so only its pure decision core is exercised here.
  *
  * @module @huanlin/dsh-plugin-input-history/tests/dom.spec
  */
 import { describe, expect, it } from 'vitest'
-import { cursorLineInfo, findComposerTextarea } from '../src/client/dom.ts'
+import { boundaryFromLineTops, findComposerEditable, findTriggerMenu } from '../src/client/dom.ts'
 
-describe('cursorLineInfo', () => {
-  it('reports a single-line value as both first and last line', () => {
-    const info = cursorLineInfo('hello', 2)
-    expect(info.currentLine).toBe(0)
-    expect(info.totalLines).toBe(1)
+describe('boundaryFromLineTops', () => {
+  it('reports a single-line box as both first and last line', () => {
+    const info = boundaryFromLineTops(100, [100], 4)
     expect(info.atFirstLine).toBe(true)
     expect(info.atLastLine).toBe(true)
   })
 
-  it('reports the first line for a caret at position 0', () => {
-    const info = cursorLineInfo('abc\ndef\nghi', 0)
-    expect(info.currentLine).toBe(0)
+  it('reports the first line for a caret on the first of many lines', () => {
+    const info = boundaryFromLineTops(100, [100, 120, 140], 4)
     expect(info.atFirstLine).toBe(true)
     expect(info.atLastLine).toBe(false)
   })
 
-  it('reports the last line for a caret at the end', () => {
-    const value = 'abc\ndef\nghi'
-    const info = cursorLineInfo(value, value.length)
-    expect(info.currentLine).toBe(2)
+  it('reports the last line for a caret on the last of many lines', () => {
+    const info = boundaryFromLineTops(140, [100, 120, 140], 4)
     expect(info.atFirstLine).toBe(false)
     expect(info.atLastLine).toBe(true)
   })
 
-  it('reports the middle line for a caret in the middle', () => {
-    const info = cursorLineInfo('abc\ndef\nghi', 5) // inside 'def'
-    expect(info.currentLine).toBe(1)
+  it('reports neither boundary for a caret on a middle line', () => {
+    const info = boundaryFromLineTops(120, [100, 120, 140], 4)
     expect(info.atFirstLine).toBe(false)
     expect(info.atLastLine).toBe(false)
   })
 
-  it('treats the position right after a line\'s last char as that line', () => {
-    // caret at index 3 = right after 'abc', before '\n'
-    const info = cursorLineInfo('abc\ndef', 3)
-    expect(info.currentLine).toBe(0)
+  it('absorbs subpixel slop within the tolerance', () => {
+    const info = boundaryFromLineTops(100.5, [103, 140], 4)
     expect(info.atFirstLine).toBe(true)
     expect(info.atLastLine).toBe(false)
   })
 
-  it('treats the position right after a newline as the next line', () => {
-    // caret at index 4 = right after '\n', at start of 'def'
-    const info = cursorLineInfo('abc\ndef', 4)
-    expect(info.currentLine).toBe(1)
-    expect(info.atFirstLine).toBe(false)
-    expect(info.atLastLine).toBe(true)
-  })
-
-  it('returns atFirstLine/atLastLine false for a non-collapsed selection', () => {
-    const info = cursorLineInfo('abc\ndef', 1, 5)
+  it('rejects a caret a full line away even with tolerance', () => {
+    const info = boundaryFromLineTops(125, [100, 140], 4)
     expect(info.atFirstLine).toBe(false)
     expect(info.atLastLine).toBe(false)
   })
 
-  it('returns atFirstLine true for a collapsed-on-first-line selection', () => {
-    // selectionStart === selectionEnd on first line
-    const info = cursorLineInfo('abc\ndef', 1, 1)
-    expect(info.atFirstLine).toBe(true)
-    expect(info.atLastLine).toBe(false)
-  })
-
-  it('handles an empty value as a single first+last line', () => {
-    const info = cursorLineInfo('', 0)
-    expect(info.currentLine).toBe(0)
-    expect(info.totalLines).toBe(1)
-    expect(info.atFirstLine).toBe(true)
-    expect(info.atLastLine).toBe(true)
-  })
-
-  it('handles a value ending with a newline (trailing empty line)', () => {
-    // 'abc\n' splits into ['abc', '']
-    const info = cursorLineInfo('abc\n', 4)
-    expect(info.currentLine).toBe(1)
-    expect(info.totalLines).toBe(2)
-    expect(info.atFirstLine).toBe(false)
-    expect(info.atLastLine).toBe(true)
-  })
-
-  it('clamps selectionStart/End to the value bounds', () => {
-    const info1 = cursorLineInfo('abc', -5)
-    expect(info1.currentLine).toBe(0)
-    const info2 = cursorLineInfo('abc', 100)
-    expect(info2.currentLine).toBe(0)
-    expect(info2.atLastLine).toBe(true)
-  })
-
-  it('swaps selectionStart > selectionEnd', () => {
-    const info = cursorLineInfo('abc\ndef', 5, 1)
-    // collapsed=false (5 !== 1), so neither flag is true
+  it('returns both flags false for an empty line-top list', () => {
+    const info = boundaryFromLineTops(100, [], 4)
     expect(info.atFirstLine).toBe(false)
     expect(info.atLastLine).toBe(false)
   })
 
-  it('handles many lines', () => {
-    const value = 'a\nb\nc\nd\ne'
-    // caret at start of 'c' (after 'a\nb\n' = index 4)
-    const info = cursorLineInfo(value, 4)
-    expect(info.currentLine).toBe(2)
-    expect(info.totalLines).toBe(5)
-    expect(info.atFirstLine).toBe(false)
-    expect(info.atLastLine).toBe(false)
+  it('keeps the flags independent for a two-line box', () => {
+    const first = boundaryFromLineTops(100, [100, 120], 4)
+    expect(first.atFirstLine).toBe(true)
+    expect(first.atLastLine).toBe(false)
+    const last = boundaryFromLineTops(120, [100, 120], 4)
+    expect(last.atFirstLine).toBe(false)
+    expect(last.atLastLine).toBe(true)
   })
 })
 
-describe('findComposerTextarea', () => {
-  it('returns null when document has no composer card', () => {
+describe('findComposerEditable', () => {
+  it('returns null when the document has no composer card', () => {
     document.body.innerHTML = ''
-    expect(findComposerTextarea()).toBeNull()
+    expect(findComposerEditable(document.body)).toBeNull()
   })
 
-  it('returns null when the composer card has no textarea', () => {
-    document.body.innerHTML = '<div data-composer-card><p>no textarea here</p></div>'
-    expect(findComposerTextarea()).toBeNull()
+  it('returns null when the composer card has no editable', () => {
+    document.body.innerHTML = '<div data-composer-card><p>no editable here</p></div>'
+    expect(findComposerEditable(document.body.querySelector('p'))).toBeNull()
   })
 
-  it('finds the textarea via document-wide query', () => {
-    document.body.innerHTML = '<div data-composer-card><textarea></textarea></div>'
-    const ta = findComposerTextarea()
-    expect(ta).not.toBeNull()
-    expect(ta?.tagName).toBe('TEXTAREA')
+  it('finds the editable via the event target ancestor walk', () => {
+    document.body.innerHTML =
+      '<div data-composer-card><div data-composer-input id="ed"></div></div>'
+    const editable = document.getElementById('ed')!
+    expect(findComposerEditable(editable)).toBe(editable)
   })
 
-  it('finds the textarea via event target ancestor walk', () => {
-    document.body.innerHTML = '<div data-composer-card><div class="wrap"><textarea id="t"></textarea></div></div>'
-    const ta = document.getElementById('t')!
-    const found = findComposerTextarea(ta)
-    expect(found).toBe(ta)
+  it('finds the editable from a descendant of the editable', () => {
+    document.body.innerHTML =
+      '<div data-composer-card><div data-composer-input><p id="p"></p></div></div>'
+    const editable = document.querySelector('[data-composer-input]')!
+    const p = document.getElementById('p')!
+    expect(findComposerEditable(p)).toBe(editable)
   })
 
-  it('returns null when event target is outside the composer card', () => {
+  it('returns null when the target is inside the card but outside the editable', () => {
+    document.body.innerHTML =
+      '<div data-composer-card><div data-composer-input></div><button id="btn"></button></div>'
+    const btn = document.getElementById('btn')!
+    expect(findComposerEditable(btn)).toBeNull()
+  })
+
+  it('returns null when the target is outside the composer card', () => {
     document.body.innerHTML = `
-      <div data-composer-card><textarea id="in-card"></textarea></div>
-      <div id="outside"><textarea id="out-card"></textarea></div>
+      <div data-composer-card><div data-composer-input id="in-card"></div></div>
+      <div id="outside"><div id="out-card"></div></div>
     `
     const outside = document.getElementById('outside')!
-    expect(findComposerTextarea(outside)).toBeNull()
+    expect(findComposerEditable(outside)).toBeNull()
   })
 
   it('returns null when called with a null target', () => {
-    document.body.innerHTML = '<div data-composer-card><textarea></textarea></div>'
-    expect(findComposerTextarea(null)).toBeNull()
+    document.body.innerHTML = '<div data-composer-card><div data-composer-input></div></div>'
+    expect(findComposerEditable(null)).toBeNull()
   })
 
-  it('handles multiple composer cards (returns the first)', () => {
+  it('returns the first card\'s editable when multiple cards exist', () => {
     document.body.innerHTML = `
-      <div data-composer-card><textarea id="first"></textarea></div>
-      <div data-composer-card><textarea id="second"></textarea></div>
+      <div data-composer-card><div data-composer-input id="first"></div></div>
+      <div data-composer-card><div data-composer-input id="second"></div></div>
     `
-    const ta = findComposerTextarea()
-    expect(ta?.id).toBe('first')
+    expect(findComposerEditable(document.getElementById('first'))?.id).toBe('first')
+  })
+})
+
+describe('findTriggerMenu', () => {
+  it('returns null when no trigger menu is open', () => {
+    document.body.innerHTML = '<div data-composer-card><div data-composer-input id="ed"></div></div>'
+    const editable = document.getElementById('ed')!
+    expect(findTriggerMenu(editable)).toBeNull()
+  })
+
+  it('finds the open menu inside the same composer card', () => {
+    document.body.innerHTML = `
+      <div data-composer-card>
+        <div data-composer-input id="ed"></div>
+        <div data-trigger-menu></div>
+      </div>
+    `
+    const editable = document.getElementById('ed')!
+    expect(findTriggerMenu(editable)).not.toBeNull()
+  })
+
+  it('does not see a menu belonging to another composer card', () => {
+    document.body.innerHTML = `
+      <div data-composer-card>
+        <div data-composer-input id="ed"></div>
+      </div>
+      <div data-composer-card>
+        <div data-composer-input></div>
+        <div data-trigger-menu></div>
+      </div>
+    `
+    const editable = document.getElementById('ed')!
+    expect(findTriggerMenu(editable)).toBeNull()
   })
 })
