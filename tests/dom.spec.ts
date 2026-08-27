@@ -47,10 +47,19 @@ describe('boundaryFromLineTops', () => {
     expect(info.atLastLine).toBe(false)
   })
 
-  it('returns both flags false for an empty line-top list', () => {
+  it('treats an empty line-top list as a single virtual line (empty editor recalls)', () => {
+    // An empty Lexical editable yields no content rects ([]), but the caret
+    // is on the only line there is: ArrowUp recall must not be blocked.
     const info = boundaryFromLineTops(100, [], 4)
-    expect(info.atFirstLine).toBe(false)
-    expect(info.atLastLine).toBe(false)
+    expect(info.atFirstLine).toBe(true)
+    expect(info.atLastLine).toBe(true)
+  })
+
+  it('keeps the empty-editor recall path independent of the caret top', () => {
+    // The virtual line accepts any caret top: no geometry comparison to fail.
+    const info = boundaryFromLineTops(9999, [], 4)
+    expect(info.atFirstLine).toBe(true)
+    expect(info.atLastLine).toBe(true)
   })
 
   it('keeps the flags independent for a two-line box', () => {

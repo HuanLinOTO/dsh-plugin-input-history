@@ -35,14 +35,15 @@ export interface LineBoundary {
  * @param lineTops - viewport `top` of each visual line, ascending.
  * @param tolerance - px slop absorbing subpixel rounding between the caret
  *   rect and its line's rect.
- * @returns the boundary flags; both false for an empty `lineTops`.
+ * @returns the boundary flags; an empty `lineTops` (empty editable) is
+ *   treated as a single virtual line, so both flags are true.
  */
 export function boundaryFromLineTops(
   caretTop: number,
   lineTops: readonly number[],
   tolerance: number,
 ): LineBoundary {
-  if (lineTops.length === 0) return { atFirstLine: false, atLastLine: false }
+  if (lineTops.length === 0) return { atFirstLine: true, atLastLine: true }
   return {
     atFirstLine: caretTop <= lineTops[0]! + tolerance,
     atLastLine: caretTop >= lineTops[lineTops.length - 1]! - tolerance,
@@ -129,7 +130,7 @@ function caretTopOf(selection: Selection): number | null {
   return el === undefined || el === null ? null : el.getBoundingClientRect().top
 }
 
-/** Ascending, deduped tops of the editable content's visual lines; `null` without geometry. */
+/** Ascending, deduped tops of the editable content's visual lines; `null` without geometry. Empty for an empty editable. */
 function contentLineTops(editable: HTMLElement): number[] | null {
   const range = document.createRange()
   range.selectNodeContents(editable)

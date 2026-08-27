@@ -33,7 +33,8 @@ export interface LineBoundary {
  * @param lineTops - viewport `top` of each visual line, ascending.
  * @param tolerance - px slop absorbing subpixel rounding between the caret
  *   rect and its line's rect.
- * @returns the boundary flags; both false for an empty `lineTops`.
+ * @returns the boundary flags; an empty `lineTops` (empty editable) is
+ *   treated as a single virtual line, so both flags are true.
  */
 export declare function boundaryFromLineTops(caretTop: number, lineTops: readonly number[], tolerance: number): LineBoundary;
 /**
