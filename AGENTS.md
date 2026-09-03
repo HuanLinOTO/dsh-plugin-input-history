@@ -6,7 +6,7 @@ Bundle-style DSH plugin that adds terminal-style prompt history navigation to th
 
 The plugin is **client-only** (host `apply` is empty). The browser half registers an invisible entry in `conversation.composer.dock`; that dock component both collects history (via `useChat`) and attaches a document-level **capture-phase** `keydown` listener that intercepts ArrowUp/ArrowDown on the composer's Lexical contenteditable and writes through `inputActions.setDraft`.
 
-Adapted to DSH v0.1.2-alpha.1 (composer is Lexical; `dsh-client-runtime` is gone; chat nodes live in `dsh-client-ui-chat`).
+Adapted to DSH v0.1.2-rc.1 (rc.1 removed the `conversation.composer.dock` InputZone owner: `input` is read via the standard `useInput` hook; empty `./invariant` companion dropped per the tightened upstream invariant rule) (composer is Lexical; `dsh-client-runtime` is gone; chat nodes live in `dsh-client-ui-chat`).
 
 ## Key conventions
 
@@ -15,7 +15,7 @@ Adapted to DSH v0.1.2-alpha.1 (composer is Lexical; `dsh-client-runtime` is gone
 - **Single slot registration**: `conversation.composer.dock` (list, session scope, id `dsh-plugin-input-history`, order 100). The dock entry renders an invisible `display: none` anchor; both the history collection and the keydown listener live in the dock component.
 - **Pre-built `lib/` strategy**: `lib/` is committed (not in `.gitignore`); no `prepare` script; `github:` install works out of the box. Required because the client half depends on `@deepseek-ai/dsh-client-*` private peer deps that pnpm cannot fetch in a temporary git-install directory.
 - **Peer deps**: cordis + react + react-dom + `@deepseek-ai/dsh-client-*` (provided by host). Zero runtime npm deps.
-- **Alpha dev setup**: `@deepseek-ai/*` alpha versions are not on npm, so `peerDependencies` declare `^0.1.2-alpha.1` (declaration only) while local typecheck resolves types through tsconfig `paths` pointing at `C:/Users/Administrator/.dsh/source/current/packages/*/lib/types`, and `node_modules/@deepseek-ai/*` are junctions into that checkout. `pnpm-workspace.yaml` pins `autoInstallPeers: false` (pnpm 10 reads the setting there, not from `.npmrc`).
+- **Alpha dev setup**: `@deepseek-ai/*` alpha versions are not on npm, so `peerDependencies` declare `^0.1.2-rc.1` (declaration only) while local typecheck resolves types through tsconfig `paths` pointing at `C:/Users/Administrator/.dsh/source/current/packages/*/lib/types`, and `node_modules/@deepseek-ai/*` are junctions into that checkout. `pnpm-workspace.yaml` pins `autoInstallPeers: false` (pnpm 10 reads the setting there, not from `.npmrc`).
 - **Pure functions for testability**: `history.ts`, `dom.ts` (pure decision core), `ime.ts` are unit-tested without DOM geometry (dom.spec.ts opts into jsdom via a per-file pragma).
 
 ## File responsibilities
@@ -23,7 +23,6 @@ Adapted to DSH v0.1.2-alpha.1 (composer is Lexical; `dsh-client-runtime` is gone
 | File | Role |
 |------|------|
 | `src/index.ts` | Host entry: `name`, empty `apply` (client-only plugin) |
-| `src/invariant.ts` | `./invariant` companion (empty installer: slot registration is HMR-proven; localStorage writes are try/catch contained) |
 | `src/client/index.ts` | Client entry: `inject = ['slots', 'locale']`, registers `conversation.composer.dock` entry + locale namespace |
 | `src/client/HistoryDock.tsx` | The dock component: invisible anchor + history collection via `useChat` + capture-phase document keydown listener navigating via `inputActions.setDraft` |
 | `src/client/history.ts` | Pure functions: `appendHistory` / `nextIndex` / `entryAt` + `HistoryStore` class (localStorage backend, quota-resilient) |
@@ -39,7 +38,7 @@ Adapted to DSH v0.1.2-alpha.1 (composer is Lexical; `dsh-client-runtime` is gone
 ```sh
 pnpm run typecheck    # tsc --noEmit (resolves DSH types through tsconfig paths + node_modules junctions)
 pnpm test             # vitest run (pure-function unit tests)
-pnpm run build        # tsdown + tsc → lib/index.js, lib/invariant.js, lib/client.js, lib/types/
+pnpm run build        # tsdown + tsc → lib/index.js, lib/client.js, lib/types/
 pnpm run bundle:client # tsdown only (skip tsc; for fast client rebuilds)
 ```
 

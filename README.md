@@ -22,7 +22,7 @@
 
 ## 架构
 
-单 bundle 双入口（host `.` + 浏览器 `./client` + invariant `./invariant`），仿照 `dsh-spur` / `dsh-auto-blame`。
+单 bundle 双入口（host `.` + 浏览器 `./client`），仿照 `dsh-spur` / `dsh-auto-blame`。不发布 `./invariant` 伴生入口（rc.1 起上游禁止空 invariant installer：本插件的 slot 注册由 HMR 安全 spec 覆盖、localStorage 写入有 try/catch 包裹，均无独立可分歧的观察，故按新规省略其源码与装配）。
 
 - **宿主半边**（`src/index.ts`）：空 `apply`——纯客户端插件。
 - **浏览器半边**（`src/client/index.ts`）：注册 `conversation.composer.dock` list slot（id `dsh-plugin-input-history`，order 100，与 ui-chat 的 StatsLine 同槽共存）。dock 条目渲染一个 `display: none` 的不可见 anchor，**历史收集**与**历史导航**都由这个 session 作用域的 dock 组件承担——两者都需要只有 session 作用域 slot 组件才能拿到的机器接口（`useChat` / `inputActions`）。
@@ -37,7 +37,7 @@ v0.1.2 起 composer 是 Lexical contenteditable，没有 textarea 可以用 nati
 
 ### Slot 选择
 
-`conversation.composer.dock`（list，session 作用域）——编辑器卡片下方的条带，由 `ui-conversation` 拥有。dock 条目从框架接收 `InputZone`（owner：`input: InputState`）+ `SessionStandardProps`（`useSession` / `sessionId` / `useInput` / `inputActions`，以及 ui-chat merge 进来的 `useChat`）。DSH 把 blank session 当作 hero 渲染时该 dock 不挂载，插件随之休眠——hero 模式本就没有 input machine，导航无处落地（见已知限制）。
+`conversation.composer.dock`（list，session 作用域）——composer 卡片下方的条带，由 `ui-conversation` 拥有。**rc.1 起该 slot 不再有 `InputZone` owner props**（`input` 不随 props 下发），dock 条目从框架接收 `SessionStandardProps`（`sessionId` / `useInput` / `inputActions`，以及 ui-chat merge 进来的 `useChat`），`input` 改经 `useInput(s => s)` 读取。DSH 把 blank session 当作 hero 渲染时该 dock 不挂载，插件随之休眠——hero 模式本就没有 input machine，导航无处落地（见已知限制）。
 
 ### 历史收集
 
@@ -64,12 +64,12 @@ dock 通过 `useChat(s => s.legacy.nodes)` 订阅 Chat target 的节点列表（
 pnpm install          # 安装开发依赖
 pnpm run typecheck    # tsc --noEmit（通过 tsconfig paths + node_modules junction 解析 DSH 源码）
 pnpm test             # vitest run（纯函数单元测试）
-pnpm run build        # tsdown + tsc → lib/index.js, lib/invariant.js, lib/client.js, lib/types/
+pnpm run build        # tsdown + tsc → lib/index.js, lib/client.js, lib/types/
 ```
 
 ### 基于 DSH checkout 类型检查
 
-`@deepseek-ai/*` 的 alpha 版本未发布到 npm：`peerDependencies` 照写 `^0.1.2-alpha.1`（仅声明），本地开发用两条通道解析类型——
+`@deepseek-ai/*` 的 alpha 版本未发布到 npm：`peerDependencies` 照写 `^0.1.2-rc.1`（仅声明），本地开发用两条通道解析类型——
 
 1. `tsconfig.json` 的 `paths` 指向 `C:/Users/Administrator/.dsh/source/current/packages/*/lib/types`（需该 checkout 已 `pnpm run build`）；
 2. `node_modules/@deepseek-ai/*` 为指向同一 checkout 的 junction（首次需手工创建，或从 dsh-interpreters / dsh-mineru 复制做法）。

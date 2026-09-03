@@ -5,7 +5,9 @@
  * Registers as a `conversation.composer.dock` list entry and renders an
  * `aria-hidden` anchor (zero layout footprint). This component owns both
  * plugin behaviors, because both need per-Session machine faces that only
- * session-scoped slot components receive:
+ * session-scoped slot components receive (rc.1: the dock slot no longer
+ * carries an `InputZone` owner — `input` is read through the standard
+ * `useInput` selector hook, alongside `useChat`/`inputActions`):
  *
  *   - **Collection**: every Chat update re-reads the legacy node slice via
  *     `useChat` and appends the latest user/steering text to the shared
@@ -28,8 +30,9 @@
 
 import { useEffect, useMemo, useRef } from 'react'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
-// Type-only: SlotMap merge for 'conversation.composer.dock' + InputZone owner
-// + ui-conversation's SessionStandardProps merge (useInput, inputActions).
+// Type-only: SlotMap merge for 'conversation.composer.dock' (rc.1: owner
+// props removed; `useInput`/`inputActions` come from the standard kit)
+// + ui-conversation's SessionStandardProps merge.
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 // Type-only: ui-chat's SessionStandardProps merge (useChat).
 import type {} from '@deepseek-ai/dsh-client-ui-chat/client'
@@ -37,7 +40,7 @@ import { DEFAULT_CAPACITY, HistoryStore, entryAt, nextIndex } from './history.ts
 import { caretLineBoundary, findComposerEditable, findTriggerMenu } from './dom.ts'
 import { isImeComposition } from './ime.ts'
 
-/** Full props: dock runtime share (InputZone owner + standard kit) + locale seat. */
+/** Full props: dock runtime share (standard kit — rc.1 removed the InputZone owner) + locale seat. */
 type HistoryDockProps = PropsRuntime<'conversation.composer.dock'> & PropsLocale<'dsh-plugin-input-history'>
 
 /**
@@ -58,10 +61,13 @@ export function getHistoryStore(): HistoryStore {
 /**
  * Render the invisible history dock entry: collection + navigation.
  *
- * @param props - dock runtime share (InputZone owner + standard hooks) + locale seat.
+ * @param props - dock runtime share (standard hooks) + locale seat.
  * @returns an `aria-hidden` anchor with zero layout footprint.
  */
-export function HistoryDock({ input, useChat, inputActions, sessionId }: HistoryDockProps) {
+export function HistoryDock({ useInput, useChat, inputActions, sessionId }: HistoryDockProps) {
+  // Live machine faces for the keydown handler; `input` is read through the
+  // standard selector hook (rc.1 dropped the dock slot's InputZone owner).
+  const input = useInput(s => s)
   // History collection: the Chat target's legacy node slice (plain
   // ConversationNode list, newest last). The store dedupes, so re-appending
   // an unchanged latest text is a no-op.

@@ -5,7 +5,9 @@
  * Registers as a `conversation.composer.dock` list entry and renders an
  * `aria-hidden` anchor (zero layout footprint). This component owns both
  * plugin behaviors, because both need per-Session machine faces that only
- * session-scoped slot components receive:
+ * session-scoped slot components receive (rc.1: the dock slot no longer
+ * carries an `InputZone` owner — `input` is read through the standard
+ * `useInput` selector hook, alongside `useChat`/`inputActions`):
  *
  *   - **Collection**: every Chat update re-reads the legacy node slice via
  *     `useChat` and appends the latest user/steering text to the shared
@@ -27,15 +29,15 @@
  */
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
 import { HistoryStore } from './history.ts';
-/** Full props: dock runtime share (InputZone owner + standard kit) + locale seat. */
+/** Full props: dock runtime share (standard kit — rc.1 removed the InputZone owner) + locale seat. */
 type HistoryDockProps = PropsRuntime<'conversation.composer.dock'> & PropsLocale<'dsh-plugin-input-history'>;
 /** Get the shared history store (initializes lazily on first call). */
 export declare function getHistoryStore(): HistoryStore;
 /**
  * Render the invisible history dock entry: collection + navigation.
  *
- * @param props - dock runtime share (InputZone owner + standard hooks) + locale seat.
+ * @param props - dock runtime share (standard hooks) + locale seat.
  * @returns an `aria-hidden` anchor with zero layout footprint.
  */
-export declare function HistoryDock({ input, useChat, inputActions, sessionId }: HistoryDockProps): import("react").JSX.Element;
+export declare function HistoryDock({ useInput, useChat, inputActions, sessionId }: HistoryDockProps): import("react").JSX.Element;
 export {};
