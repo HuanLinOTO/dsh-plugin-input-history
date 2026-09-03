@@ -2,7 +2,6 @@
  * Dev/CI tsdown config: emits three artifacts:
  *
  *   - `lib/index.js`      — node half (plain ESM, bundles src/index.ts)
- *   - `lib/invariant.js`  — node half (plain ESM, bundles src/invariant.ts)
  *   - `lib/client.js`     — browser half (CJS wrapped in DSH's
  *                            `window.__ModuleLoader__.load({id, factory})`
  *                            so the client module loader can compose it)
@@ -22,10 +21,10 @@ const HOST_EXTERNALS = [
   '@deepseek-ai/cordis',
   'schemastery',
   '@deepseek-ai/dsh-client-locale',
-  '@deepseek-ai/dsh-client-runtime',
+  '@deepseek-ai/dsh-client-ui-chat',
   '@deepseek-ai/dsh-client-ui-conversation',
+  '@deepseek-ai/dsh-client-ui-renderer',
   '@deepseek-ai/dsh-client-ui-slots',
-  '@deepseek-ai/dsh-invariants',
 ]
 
 /** DSH platform modules that stay external in the browser bundle. */
@@ -34,19 +33,20 @@ const CLIENT_EXTERNALS = [
   'react-dom',
   'react/jsx-runtime',
   '@deepseek-ai/cordis',
-  '@deepseek-ai/dsh-client-runtime',
-  '@deepseek-ai/dsh-client-runtime/client',
   '@deepseek-ai/dsh-client-locale',
   '@deepseek-ai/dsh-client-locale/client',
-  '@deepseek-ai/dsh-client-ui-slots',
+  '@deepseek-ai/dsh-client-ui-chat',
+  '@deepseek-ai/dsh-client-ui-chat/client',
   '@deepseek-ai/dsh-client-ui-conversation',
   '@deepseek-ai/dsh-client-ui-conversation/client',
-  '@deepseek-ai/dsh-client-web-react',
+  '@deepseek-ai/dsh-client-ui-renderer',
+  '@deepseek-ai/dsh-client-ui-renderer/client',
+  '@deepseek-ai/dsh-client-ui-slots',
 ]
 
 const libConfig: UserConfig = {
   name: ID,
-  entry: { index: 'src/index.ts', invariant: 'src/invariant.ts' },
+  entry: { index: 'src/index.ts' },
   outDir: 'lib',
   format: ['esm'],
   platform: 'node',
