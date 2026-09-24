@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Input History",
+    "description": "Terminal-style prompt history for the DSH composer: ArrowUp/ArrowDown cycles through recently sent messages gathered from every session and persisted to localStorage, restoring your in-progress draft once you arrow past the newest entry. IME-safe and multi-line-aware; yields to open slash/@ menus."
+  }
+}
