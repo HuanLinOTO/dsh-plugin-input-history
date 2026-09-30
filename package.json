@@ -1,6 +1,6 @@
 {
   "name": "@huanlin/dsh-plugin-input-history",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "publishConfig": {
     "access": "public"
   },
@@ -53,11 +53,11 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-client-ui-slots": "^0.1.7-rc.1",
-    "@deepseek-ai/dsh-client-locale": "^0.1.7-rc.1",
-    "@deepseek-ai/dsh-client-ui-chat": "^0.1.7-rc.1",
-    "@deepseek-ai/dsh-client-ui-conversation": "^0.1.7-rc.1",
-    "@deepseek-ai/dsh-client-ui-renderer": "^0.1.7-rc.1",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.2.0-rc.1",
+    "@deepseek-ai/dsh-client-locale": "^0.2.0-rc.1",
+    "@deepseek-ai/dsh-client-ui-chat": "^0.2.0-rc.1",
+    "@deepseek-ai/dsh-client-ui-conversation": "^0.2.0-rc.1",
+    "@deepseek-ai/dsh-client-ui-renderer": "^0.2.0-rc.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
