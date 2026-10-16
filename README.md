@@ -62,17 +62,18 @@ dock 通过 `useChat(s => s.legacy.nodes)` 订阅 Chat target 的节点列表（
 
 ```sh
 pnpm install          # 安装开发依赖
-pnpm run typecheck    # tsc --noEmit（通过 tsconfig paths + node_modules junction 解析 DSH 源码）
+pnpm run typecheck    # tsc --noEmit（通过 tsconfig paths 解析 DSH checkout 的 lib/types）
 pnpm test             # vitest run（纯函数单元测试）
 pnpm run build        # tsdown + tsc → lib/index.js, lib/client.js, lib/types/
 ```
 
 ### 基于 DSH checkout 类型检查
 
-`@deepseek-ai/*` 的 alpha 版本未发布到 npm：`peerDependencies` 照写 `^0.1.2-rc.1`（仅声明），本地开发用两条通道解析类型——
+`@deepseek-ai/*` 的 alpha 版本未发布到 npm：`peerDependencies` 照写 `^0.2.1-alpha.5`（仅声明），本地开发类型检查单通道解析——
 
-1. `tsconfig.json` 的 `paths` 指向 `C:/Users/Administrator/.dsh/source/current/packages/*/lib/types`（需该 checkout 已 `pnpm run build`）；
-2. `node_modules/@deepseek-ai/*` 为指向同一 checkout 的 junction（首次需手工创建，或从 dsh-interpreters / dsh-mineru 复制做法）。
+1. `tsconfig.json` 的 `paths` 指向 `D:/Projects/deepseek-harness/dsh/packages/*/lib/types` 与 `vendor/*/lib/types`（需该 checkout 已 `pnpm run build`）。
+
+`node_modules` 不含任何 `@deepseek-ai/*` 链接：`src/` 的 `@deepseek-ai` 导入全部经 tsconfig `paths` 命中源码树类型，测试为纯函数单测、运行时不 import `@deepseek-ai`，因此无需 junction（也不存在 junction 假绿面）。
 
 `pnpm-workspace.yaml` 的 `autoInstallPeers: false` 阻止 pnpm 去 registry 拉取不存在的 peer 版本（pnpm 10 读 workspace.yaml 的这一项，不是 `.npmrc`）。
 

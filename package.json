@@ -1,6 +1,6 @@
 {
   "name": "@huanlin/dsh-plugin-input-history",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "publishConfig": {
     "access": "public"
   },
@@ -52,12 +52,12 @@
     "bundle:client": "tsdown -c tsdown.config.ts"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-client-ui-slots": "^0.2.0-rc.1",
-    "@deepseek-ai/dsh-client-locale": "^0.2.0-rc.1",
-    "@deepseek-ai/dsh-client-ui-chat": "^0.2.0-rc.1",
-    "@deepseek-ai/dsh-client-ui-conversation": "^0.2.0-rc.1",
-    "@deepseek-ai/dsh-client-ui-renderer": "^0.2.0-rc.1",
+    "@deepseek-ai/cordis": "~4.0.5-alpha.2",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.2.1-alpha.5",
+    "@deepseek-ai/dsh-client-locale": "^0.2.1-alpha.5",
+    "@deepseek-ai/dsh-client-ui-chat": "^0.2.1-alpha.5",
+    "@deepseek-ai/dsh-client-ui-conversation": "^0.2.1-alpha.5",
+    "@deepseek-ai/dsh-client-ui-renderer": "^0.2.1-alpha.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
